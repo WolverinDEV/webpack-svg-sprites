@@ -1,6 +1,6 @@
 {
   "name": "webpack-svg-sprite-generator",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "",
   "main": "plugin.js",
   "types": "ts/index.d.ts",
@@ -8,8 +8,15 @@
     "build": "webpack"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "WolverinDEV",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/WolverinDEV/webpack-svg-sprites/issues"
+  },
+  "repository": {
+    "url": "https://github.com/WolverinDEV/webpack-svg-sprites",
+    "type": "git"
+  },
   "devDependencies": {
     "@types/tapable": "^1.0.6",
     "@types/webpack": "^4.41.21",
