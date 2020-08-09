@@ -92,7 +92,7 @@ class SvgSpriteModule extends Module {
 
             this.spriteJs = await generateSpriteJs(this.config.dtsOptions, this.sprite, this.spriteAssetUrl, this.config.cssClassPrefix);
 
-            const dtsContent = await generateSpriteDts(this.config.dtsOptions, this.configName, this.sprite, this.config.cssClassPrefix, this.pluginConfig.modulePrefix);
+            const dtsContent = await generateSpriteDts(this.config.dtsOptions, this.configName, this.sprite, this.config.cssClassPrefix, this.pluginConfig.modulePrefix, this.config.folder);
             await fs.writeFile(path.join(this.pluginConfig.dtsOutputFolder, this.configName + ".d.ts"), dtsContent);
         })().then(() => {
             callback();

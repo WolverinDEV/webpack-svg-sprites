@@ -18,7 +18,6 @@ export = {
                         module: true,
                         enumName: "TestIcons",
                         classUnionName: "TestIconClasses",
-                        cssClassPrefix: "client-",
                     },
                     cssOptions: [
                         {
