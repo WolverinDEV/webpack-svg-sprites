@@ -1,5 +1,6 @@
 import * as path from "path";
 import {Configuration} from "webpack";
+import {CleanWebpackPlugin} from "clean-webpack-plugin";
 import * as SpriteGenerator from "../plugin";
 import * as HtmlWebpackPlugin from "html-webpack-plugin";
 
@@ -8,6 +9,7 @@ export = {
     target: "web",
 
     plugins: [
+        new CleanWebpackPlugin(),
         new SpriteGenerator.Plugin({
             dtsOutputFolder: path.join(__dirname, "app"),
             configurations: {

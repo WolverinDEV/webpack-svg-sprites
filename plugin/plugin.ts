@@ -69,7 +69,10 @@ class SvgSpriteModule extends Module {
             async: false,
             exportsType: undefined
         };
-        this.buildInfo = {};
+        this.buildInfo = {
+            cacheable: true,
+            assets: {}
+        };
 
         if(this.spriteAssetName) {
             delete compilation.assets[this.spriteAssetName];
@@ -83,7 +86,7 @@ class SvgSpriteModule extends Module {
             this.spriteAssetName = "sprite-" + sha1(this.spriteSvg).substr(-20) + ".svg";
             this.spriteAssetUrl = (compilation.options.output.publicPath || "") + this.spriteAssetName;
 
-            compilation.assets[this.spriteAssetName] = new RawSource(this.spriteSvg);
+            this.buildInfo.assets[this.spriteAssetName] = new RawSource(this.spriteSvg);
 
             this.spriteCss = "";
             for(const cssOption of this.config.cssOptions) {
