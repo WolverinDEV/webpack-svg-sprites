@@ -1,0 +1,10 @@
+.idea/
+
+dist
+node_modules
+
+plugin/*.js
+plugin/*.js.map
+
+webpack.config.js
+webpack.config.js.map
