@@ -21,8 +21,8 @@ function jsNode2xml(indent: string, data: XMLParser.Node) {
     const tagOpen = `<${data.name}${generateAttributes(data.attributes)}>`;
     const tagClose = `</${data.name}>`;
 
-    let content = data.children.length ? data.children.map(e => jsNode2xml(indent + "  ", e)).join("\n") : data.content;
-    if(content?.length !== 0)
+    let content = data.children.length ? data.children.map(e => jsNode2xml(indent + "  ", e)).join("\n") : data.content || "";
+    if(content.length !== 0)
         content = "\n" + content + "\n" + indent;
 
     return (
@@ -277,6 +277,11 @@ export async function generateSprite(files: string[]) : Promise<GeneratedSprite>
 
         svg.data = XMLParser((await fs.readFile(file)).toString());
         svg.name = path.basename(file, path.extname(file));
+
+        if(!svg.data.root) {
+            console.warn("Missing svg root element for %s. Skipping file.", file);
+            continue;
+        }
 
         if(svg.data.root.name !== "svg") {
             console.warn("invalid svg root attribute for " + file + " (" + svg.data.root.name + ")");
