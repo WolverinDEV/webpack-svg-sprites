@@ -1,5 +1,5 @@
-import * as Generator from "./Generator";
-import { SpriteGenerator, Options as PluginOptions } from "./Plugin";
+import * as Generator from "./generator";
+import { SpriteGenerator, Options as PluginOptions } from "./plugin";
 
 export type Sprite = Generator.GeneratedSprite;
 export type DtsOptions = Generator.SpriteDtsOptions;
