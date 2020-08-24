@@ -294,6 +294,9 @@ export async function generateSprite(files: string[]) : Promise<GeneratedSprite>
         if(isNaN(width) || isNaN(height)) {
             console.warn("Skipping SVG %s because of invalid bounds (Parsed: %d x %d, Values: %o).", file, width, height, rootAttributes["viewBox"].split(" "));
             continue;
+        } else if(Math.floor(width) !== width || Math.floor(height) !== height) {
+            console.warn("Skipping SVG %s because of an non interger height/width (%fx%f)", file, width, height);
+            continue;
         }
 
         svg.bounds = {
