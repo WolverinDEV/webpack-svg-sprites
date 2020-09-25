@@ -93,7 +93,9 @@ export async function generateSpriteCss(options: SpriteCssOptions, classPrefix: 
     let result = "";
     result += `${options.selector}{`;
     result +=   `display:inline-block;`;
-    result +=   `background:url("${publicUrl}") no-repeat;`;
+    /* doing a relative path here as well since WebPack may messes around here since the public path may start with / and if it's a file path / means the root... */
+    result +=   `background-image:url(".${publicUrl}"),url("${publicUrl}");`;
+    result +=   `background-repeat:no-repeat;`;
     result +=   `background-size:${sprite.width * scaleX}${options.unit} ${sprite.height * scaleY}${options.unit};`;
     result +=   `height:${defaultHeight * scaleY}${options.unit};`;
     result +=   `width:${defaultWidth * scaleX}${options.unit}`;
