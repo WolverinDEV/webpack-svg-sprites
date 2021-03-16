@@ -1,8 +1,8 @@
 import * as path from "path";
 import {Configuration} from "webpack";
 import {CleanWebpackPlugin} from "clean-webpack-plugin";
-import * as SpriteGenerator from "../plugin";
-import * as HtmlWebpackPlugin from "html-webpack-plugin";
+import HtmlWebpackPlugin from "html-webpack-plugin";
+import * as SpriteGenerator from "../plugin/";
 
 export = {
     entry: path.join(__dirname, "app", "index.tsx"),
@@ -47,18 +47,23 @@ export = {
         rules: [
             {
                 test: /\.tsx?$/,
-                loader: [
+                use: [
                     "ts-loader"
                 ]
             }
         ]
     },
     mode: process.env.NODE_ENV === "development" ? "development" : "production",
-
+    devServer: {
+        contentBase: path.join(__dirname, 'dist'),
+        compress: true,
+        port: 9000,
+    },
     resolve: {
         extensions: [".ts", ".tsx", ".css", ".js"]
     },
     output: {
         filename: "[name].[contenthash].js",
+        path: path.resolve(__dirname, "dist")
     }
 } as Configuration;

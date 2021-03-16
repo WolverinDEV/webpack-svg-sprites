@@ -51,7 +51,7 @@ export = {
 
     target: "node",
     output: {
-        path: path.resolve(__dirname, "dist"),
+        path: process.env.OUTPUT_PATH || path.resolve(__dirname, "dist"),
         filename: "plugin.js",
 
         libraryTarget: "umd",

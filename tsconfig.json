@@ -5,7 +5,8 @@
     "sourceMap": false,
     "declarationDir": "dist/ts",
     "declarationMap": false,
-    "declaration": true
+    "declaration": true,
+    "esModuleInterop": true
   },
   "include": [
     "plugin"

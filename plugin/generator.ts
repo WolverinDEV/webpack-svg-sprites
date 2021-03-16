@@ -1,11 +1,9 @@
 import * as fs from "fs-extra";
 import * as path from "path";
-import * as XMLParser from "xml-parser";
 import { pascalCase } from "change-case";
 
-let potpack = require("potpack");
-if(typeof potpack !== "function" && potpack.default)
-    potpack = potpack.default;
+import XMLParser from "xml-parser";
+import potpack from "potpack";
 
 function generateAttributes(attributes: XMLParser.Attributes) {
     const keys = Object.keys(attributes);
@@ -50,7 +48,7 @@ export async function generateSpriteSvg(sprite: GeneratedSprite) {
     let result = "";
     result += `<?xml version="1.0" encoding="utf-8"?>\n`;
     result += `<!-- ${sprite.entries.length} icons packed -->\n`;
-    result += `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${sprite.width}" height="${sprite.height}" viewBox="0 0 ${sprite.width} ${sprite.height}">\n`;
+    result += `<svg xmlns="http://www.w3.org/2000/svg"  width="${sprite.width}" height="${sprite.height}" viewBox="0 0 ${sprite.width} ${sprite.height}">\n`;
 
     for(const file of sprite.entries) {
         const root = file.data.root;
@@ -252,13 +250,13 @@ export async function generateSpriteJs(options: SpriteDtsOptions, sprite: Genera
     lines.push(`let ClassList = [${sprite.entries.map(e => `"${cssClassPrefix}${e.name}", `)}];`);
 
     lines.push(``);
-    lines.push(`Object.defineProperty(exports, "__esModule", { value: true });`);
-    lines.push(`exports.${options.enumName} = Object.freeze(EnumClassList);`);
-    lines.push(`exports.spriteUrl = SpriteUrl;`);
-    lines.push(`exports.classList = Object.freeze(ClassList);`);
-    lines.push(`exports.spriteEntries = Object.freeze(SpriteEntries);`);
-    lines.push(`exports.spriteWidth = ${sprite.width};`);
-    lines.push(`exports.spriteHeight = ${sprite.height};`);
+    lines.push(`Object.defineProperty(module.exports, "__esModule", { value: true });`);
+    lines.push(`module.exports.${options.enumName} = Object.freeze(EnumClassList);`);
+    lines.push(`module.exports.spriteUrl = SpriteUrl;`);
+    lines.push(`module.exports.classList = Object.freeze(ClassList);`);
+    lines.push(`module.exports.spriteEntries = Object.freeze(SpriteEntries);`);
+    lines.push(`module.exports.spriteWidth = ${sprite.width};`);
+    lines.push(`module.exports.spriteHeight = ${sprite.height};`);
     return lines.join("\n");
 }
 
@@ -291,7 +289,7 @@ export async function generateSprite(files: string[]) : Promise<GeneratedSprite>
         }
 
         const rootAttributes = svg.data.root.attributes;
-        const [ xOff, yOff, width, height ] = rootAttributes["viewBox"].split(" ").map(parseFloat);
+        const [ /* xOff */, /* yOff */, width, height ] = rootAttributes["viewBox"].split(" ").map(parseFloat);
 
         if(isNaN(width) || isNaN(height)) {
             console.warn("Skipping SVG %s because of invalid bounds (Parsed: %d x %d, Values: %o).", file, width, height, rootAttributes["viewBox"].split(" "));

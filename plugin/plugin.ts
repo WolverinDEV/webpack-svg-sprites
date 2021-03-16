@@ -1,7 +1,6 @@
-import * as webpack from "webpack";
 import * as path from "path";
 import * as fs from "fs-extra";
-import * as sha1 from "sha1";
+import sha1 from "sha1";
 
 import {
     GeneratedSprite,
@@ -12,6 +11,12 @@ import {
     SpriteDtsOptions
 } from "./generator";
 
+const Module = require("webpack/lib/Module");
+const RuntimeGlobals = require("webpack/lib/RuntimeGlobals");
+const { RawSource } = require("webpack-sources");
+
+import {Compiler} from "webpack";
+
 export interface Options {
     modulePrefix?: string, /* defaults to svg-sprites/ */
     dtsOutputFolder: string,
@@ -20,8 +25,6 @@ export interface Options {
     }
 }
 
-const Module = require("webpack/lib/Module");
-const { RawSource } = require("webpack-sources");
 
 interface SvgSpriteConfiguration {
     folder: string;
@@ -31,34 +34,47 @@ interface SvgSpriteConfiguration {
     cssOptions: SpriteCssOptions[];
 }
 
+const TYPES = new Set(["javascript"]);
+const RUNTIME_REQUIREMENTS = new Set([
+    RuntimeGlobals.module
+]);
+
 class SvgSpriteModule extends Module {
     private readonly pluginConfig: Options;
     private readonly configName: string;
     private readonly config: SvgSpriteConfiguration;
+
     private sprite: GeneratedSprite;
     private spriteSvg: string;
     private spriteCss: string;
     private spriteJs: string;
+
     private spriteAssetName: string;
     private spriteAssetUrl: string;
 
     constructor(context: string, pluginConfig: Options, configName: string, config: SvgSpriteConfiguration) {
-        super("javascript/dynamic", context);
+        super("javascript/dynamic", null);
         this.pluginConfig = pluginConfig;
         this.configName = configName;
         this.config = config;
+        this.buildInfo = {};
+        this.clearDependenciesAndBlocks();
+    }
+
+    getSourceTypes() {
+        return TYPES;
     }
 
     identifier() {
+        return "svg-sprite/" + this.configName;
+    }
+
+    readableIdentifier() {
         return `SVG sprite ` + this.configName;
     }
 
-    readableIdentifier(requestShortener) {
-        return `SVG sprite ` + this.configName;
-    }
-
-    needRebuild() {
-        return false;
+    needBuild(context, callback) {
+        callback(null, !this.buildMeta);
     }
 
     build(options, compilation, resolver, fs_, callback) {
@@ -71,7 +87,7 @@ class SvgSpriteModule extends Module {
         };
         this.buildInfo = {
             cacheable: true,
-            assets: {}
+            assets: {},
         };
 
         if(this.spriteAssetName) {
@@ -84,7 +100,7 @@ class SvgSpriteModule extends Module {
 
             this.spriteSvg = await generateSpriteSvg(this.sprite);
             this.spriteAssetName = "sprite-" + sha1(this.spriteSvg).substr(-20) + ".svg";
-            this.spriteAssetUrl = (compilation.options.output.publicPath || "") + this.spriteAssetName;
+            this.spriteAssetUrl = this.spriteAssetName;
 
             this.buildInfo.assets[this.spriteAssetName] = new RawSource(this.spriteSvg);
 
@@ -105,7 +121,9 @@ class SvgSpriteModule extends Module {
         });
     }
 
-    source() {
+    codeGeneration(context) {
+        const sources = new Map();
+
         const encodedCss = this.spriteCss
                                 .replace(/%/g, "%25")
                                 .replace(/"/g, "%22")
@@ -119,7 +137,9 @@ class SvgSpriteModule extends Module {
         lines.push(``);
         lines.push(`/* initialize typescript objects */`);
         lines.push(...this.spriteJs.split("\n"));
-        return new RawSource(lines.join("\n"));
+
+        sources.set("javascript", new RawSource(lines.join("\n")));
+        return { sources: sources, runtimeRequirements: RUNTIME_REQUIREMENTS };
     }
 
     size() {
@@ -133,7 +153,10 @@ class SvgSpriteModule extends Module {
         hash.update(this.spriteSvg || "none");
         super.updateHash(hash, chunkGraph);
     }
+
+    addReason(_requestModule, _dependency) { }
 }
+
 
 export class SpriteGenerator {
     readonly options: Options;
@@ -143,20 +166,19 @@ export class SpriteGenerator {
         this.options.modulePrefix = this.options.modulePrefix || "svg-sprites/";
     }
 
-    apply(compiler: webpack.Compiler) {
-        compiler.hooks.thisCompilation.tap("SpriteGenerator", (compilation, { normalModuleFactory }) => {
-            normalModuleFactory.hooks.factory.tap("SpriteGenerator", factory => (data, callback) => {
-                if(data.request.startsWith(this.options.modulePrefix)) {
-                    const configName = data.request.substr(this.options.modulePrefix.length);
-                    if(this.options.configurations[configName] === undefined) {
-                        callback("Missing SVG configuration " + configName);
-                        return;
-                    }
-                    callback(null, new SvgSpriteModule(data.request, this.options, configName, this.options.configurations[configName]));
+    apply(compiler: Compiler) {
+        compiler.hooks.normalModuleFactory.tap("SpriteGenerator", normalModuleFactory => {
+            normalModuleFactory.hooks.resolve.tap("SpriteGenerator", resolveData => {
+                if(!resolveData.request.startsWith(this.options.modulePrefix)) {
                     return;
                 }
 
-                factory(data, callback);
+                const configName = resolveData.request.substr(this.options.modulePrefix.length);
+                if(!this.options.configurations[configName]) {
+                    return;
+                }
+
+                return new SvgSpriteModule(resolveData.request, this.options, configName, this.options.configurations[configName]);
             });
         });
     }
