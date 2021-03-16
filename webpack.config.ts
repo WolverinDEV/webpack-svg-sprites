@@ -1,7 +1,7 @@
 import * as path from "path";
 import {Configuration} from "webpack";
 import {CleanWebpackPlugin} from "clean-webpack-plugin";
-import * as CopyWebpackPlugin from "copy-webpack-plugin";
+import CopyWebpackPlugin from "copy-webpack-plugin";
 
 export = {
     entry: "./plugin/index.ts",
