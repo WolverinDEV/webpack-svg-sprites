@@ -1,8 +1,6 @@
 import * as path from "path";
 import * as SystemFs from "fs-extra";
 import sha1 from "sha1";
-import util from "util";
-
 import webpack, {Compiler, Module, RuntimeGlobals} from "webpack";
 
 import {

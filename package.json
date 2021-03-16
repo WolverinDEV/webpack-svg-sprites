@@ -1,6 +1,6 @@
 {
   "name": "webpack-svg-sprite-generator",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "",
   "main": "plugin.js",
   "types": "ts/index.d.ts",
@@ -37,12 +37,13 @@
     "typescript": "^3.9.7",
     "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.11.2",
-    "xml-parser": "^1.2.1"
+    "xml-parser": "^1.2.1",
+    "webpack": "^5.26.1",
+    "potpack": "^1.0.1"
   },
-  "dependencies": {
+  "peerDependencies": {
+    "webpack": "^5.x",
     "fs-extra": "^9.0.1",
-    "path": "^0.12.7",
-    "potpack": "^1.0.1",
-    "webpack": "^5.26.1"
+    "path": "^0.12.7"
   }
 }
