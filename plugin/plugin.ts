@@ -1,6 +1,9 @@
 import * as path from "path";
-import * as fs from "fs-extra";
+import * as SystemFs from "fs-extra";
 import sha1 from "sha1";
+import util from "util";
+
+import webpack, {Compiler, Module, RuntimeGlobals} from "webpack";
 
 import {
     GeneratedSprite,
@@ -10,12 +13,9 @@ import {
     SpriteCssOptions,
     SpriteDtsOptions
 } from "./generator";
+import Compilation = webpack.Compilation;
 
-const Module = require("webpack/lib/Module");
-const RuntimeGlobals = require("webpack/lib/RuntimeGlobals");
 const { RawSource } = require("webpack-sources");
-
-import {Compiler} from "webpack";
 
 export interface Options {
     modulePrefix?: string, /* defaults to svg-sprites/ */
@@ -74,17 +74,31 @@ class SvgSpriteModule extends Module {
     }
 
     needBuild(context, callback) {
-        callback(null, !this.buildMeta);
+        context.fileSystemInfo.getContextHash(this.config.folder, (error, hash) => {
+            if(error) {
+                callback(error);
+                return;
+            }
+
+            const needBuild = this.buildMeta?.directoryHash !== hash;
+            callback(null, needBuild);
+        })
     }
 
-    build(options, compilation, resolver, fs_, callback) {
-        console.info("Building SVG sprite for configuration %s", this.configName);
+    build(options, compilation: Compilation, resolver, fs, callback) {
+        this.buildAsync(options, compilation).then(() => {
+            callback();
+        }).catch(error => {
+            callback(error);
+        });
+    }
 
-        this.built = true;
+    private async buildAsync(options_, compilation: Compilation) {
         this.buildMeta = {
             async: false,
             exportsType: undefined
         };
+
         this.buildInfo = {
             cacheable: true,
             assets: {},
@@ -94,31 +108,36 @@ class SvgSpriteModule extends Module {
             delete compilation.assets[this.spriteAssetName];
         }
 
-        (async () => {
-            const files = (await fs.readdir(this.config.folder)).map(e => path.join(this.config.folder, e));
-            this.sprite = await generateSprite(files);
-
-            this.spriteSvg = await generateSpriteSvg(this.sprite);
-            this.spriteAssetName = "sprite-" + sha1(this.spriteSvg).substr(-20) + ".svg";
-            this.spriteAssetUrl = this.spriteAssetName;
-
-            this.buildInfo.assets[this.spriteAssetName] = new RawSource(this.spriteSvg);
-
-            this.spriteCss = "";
-            for(const cssOption of this.config.cssOptions) {
-                this.spriteCss += await generateSpriteCss(cssOption, this.config.cssClassPrefix, this.sprite, this.spriteAssetUrl);
-            }
-
-            this.spriteJs = await generateSpriteJs(this.config.dtsOptions, this.sprite, this.spriteAssetUrl, this.config.cssClassPrefix);
-
-            const dtsContent = await generateSpriteDts(this.config.dtsOptions, this.configName, this.sprite, this.config.cssClassPrefix, this.pluginConfig.modulePrefix, this.config.folder);
-            await fs.writeFile(path.join(this.pluginConfig.dtsOutputFolder, this.configName + ".d.ts"), dtsContent);
-        })().then(() => {
-            callback();
-        }).catch(error => {
-            console.error(error);
-            callback("failed to generate sprite");
+        this.buildMeta.directoryHash = await new Promise((resolve, reject) => {
+            compilation.fileSystemInfo.getContextHash(this.config.folder, (err, hash) => {
+                if(err) {
+                    reject(err);
+                } else {
+                    resolve(hash);
+                }
+            });
         });
+        compilation.logger.info("Building SVG sprite for configuration %s (Hash: %s).", this.configName, this.buildMeta.directoryHash);
+
+        const files = await SystemFs.readdir(this.config.folder);
+        this.sprite = await generateSprite(files.map(file => path.join(this.config.folder, file)));
+
+        this.spriteSvg = await generateSpriteSvg(this.sprite);
+        this.spriteAssetName = "sprite-" + sha1(this.spriteSvg).substr(-20) + ".svg";
+        this.spriteAssetUrl = this.spriteAssetName;
+
+        this.buildInfo.assets[this.spriteAssetName] = new RawSource(this.spriteSvg);
+
+        this.spriteCss = "";
+        for(const cssOption of this.config.cssOptions) {
+            this.spriteCss += await generateSpriteCss(cssOption, this.config.cssClassPrefix, this.sprite, this.spriteAssetUrl);
+        }
+
+        this.spriteJs = await generateSpriteJs(this.config.dtsOptions, this.sprite, this.spriteAssetUrl, this.config.cssClassPrefix);
+
+        const dtsContent = await generateSpriteDts(this.config.dtsOptions, this.configName, this.sprite, this.config.cssClassPrefix, this.pluginConfig.modulePrefix, this.config.folder);
+        await SystemFs.writeFile(path.join(this.pluginConfig.dtsOutputFolder, this.configName + ".d.ts"), dtsContent);
+        compilation.logger.info("SVG sprite configuration %s contains %d/%d sprites", this.configName, this.sprite.entries.length, files.length);
     }
 
     codeGeneration(context) {
@@ -155,6 +174,15 @@ class SvgSpriteModule extends Module {
     }
 
     addReason(_requestModule, _dependency) { }
+
+    addCacheDependencies(
+        fileDependencies,
+        contextDependencies,
+        missingDependencies,
+        buildDependencies
+    ) {
+        contextDependencies.add(this.config.folder);
+    }
 }
 
 
