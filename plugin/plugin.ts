@@ -20,7 +20,8 @@ export interface Options {
     dtsOutputFolder: string,
     configurations: {
         [key: string] : SvgSpriteConfiguration
-    }
+    },
+    publicPath?: string,
 }
 
 
@@ -122,7 +123,7 @@ class SvgSpriteModule extends Module {
 
         this.spriteSvg = await generateSpriteSvg(this.sprite);
         this.spriteAssetName = "sprite-" + sha1(this.spriteSvg).substr(-20) + ".svg";
-        this.spriteAssetUrl = this.spriteAssetName;
+        this.spriteAssetUrl = (this.pluginConfig.publicPath || "") + this.spriteAssetName;
 
         this.buildInfo.assets[this.spriteAssetName] = new RawSource(this.spriteSvg);
 
