@@ -65,7 +65,7 @@ class SvgSpriteModule extends Module {
     }
 
     identifier() {
-        return "svg-sprite/" + this.configName;
+        return this.pluginConfig.modulePrefix + this.configName;
     }
 
     readableIdentifier() {
@@ -73,7 +73,7 @@ class SvgSpriteModule extends Module {
     }
 
     libIdent() {
-        return "svg-sprite/" + this.configName;
+        return this.pluginConfig.modulePrefix + this.configName;
     }
 
     needBuild(context, callback) {
