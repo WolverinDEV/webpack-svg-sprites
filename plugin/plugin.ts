@@ -72,6 +72,10 @@ class SvgSpriteModule extends Module {
         return `SVG sprite ` + this.configName;
     }
 
+    libIdent() {
+        return "svg-sprite/" + this.configName;
+    }
+
     needBuild(context, callback) {
         context.fileSystemInfo.getContextHash(this.config.folder, (error, hash) => {
             if(error) {
