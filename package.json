@@ -1,6 +1,6 @@
 {
   "name": "webpack-svg-sprite-generator",
-  "version": "5.0.4",
+  "version": "5.0.5",
   "description": "",
   "main": "plugin.js",
   "types": "ts/index.d.ts",
