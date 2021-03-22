@@ -4,6 +4,7 @@ import {CleanWebpackPlugin} from "clean-webpack-plugin";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import * as SpriteGenerator from "../plugin/";
 
+console.log("Using config %s", process.env.NODE_ENV === "development" ? "development" : "production");
 export = {
     entry: path.join(__dirname, "app", "index.tsx"),
     target: "web",

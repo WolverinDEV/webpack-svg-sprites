@@ -53,6 +53,7 @@ class SvgSpriteModule extends Module {
 
     constructor(context: string, pluginConfig: Options, configName: string, config: SvgSpriteConfiguration) {
         super("javascript/dynamic", null);
+        this.context = context;
         this.pluginConfig = pluginConfig;
         this.configName = configName;
         this.config = config;
